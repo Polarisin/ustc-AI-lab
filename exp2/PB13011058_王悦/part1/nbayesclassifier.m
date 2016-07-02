@@ -1,0 +1,19 @@
+function [ypred,accuracy]= nbayesclassifier (traindata, trainlabel, testdata, testlabel, threshold)
+digit8count=sum(trainlabel);
+digit3count=size(traindata,1)-digit8count;
+digit3=(1-trainlabel')*im2bw(traindata/255,0.5);
+digit8=trainlabel'*im2bw(traindata/255,0.5);
+digitsum=digit3+digit8;
+digit3=digit3./digitsum;
+digit8=digit8./digitsum;
+digit3(isnan(digit3))=0.5;
+digit8(isnan(digit8))=0.5;
+digit3div8=digit3./digit8;
+digit3div8(isnan(digit3div8))=1;
+digit3div8(digit3div8==Inf)=1;
+temp=im2bw(testdata/255,0.5).*repmat(digit3div8,size(testlabel,1),1);
+temp(temp==0)=1;
+p(1:size(testdata,1),1)=(digit3count+1)/(digit8count+1);
+p=p.*prod(temp,2);
+ypred=im2bw(1./(1+p),threshold);
+accuracy=sum(~xor(ypred,testlabel))/size(testlabel,1);
